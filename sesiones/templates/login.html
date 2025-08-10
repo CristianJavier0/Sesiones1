@@ -1,0 +1,20 @@
+$def with(message="")
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Iniciar sesión</title>
+</head>
+<body>
+    <form action="/login" method="post">
+        <label for="username">Nombre de usuario:</label><br>
+        <input type="text" id="username" name="username" /> <br>
+        <label for="password">Contraseña:</label><br>
+        <input type="password" id="password" name="password" /><br>
+        <input type="submit" value="Iniciar sesión" />
+    </form>
+    $if message:
+        <p> $message </p>
+    $else:
+        <p>Ingrese su nombre de usuario y contraseña</p>
+</body>
+</html>
