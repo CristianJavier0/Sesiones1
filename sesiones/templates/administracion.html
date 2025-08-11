@@ -1,12 +1,13 @@
-$def with(username)
+$def with ()
 <html>
-    <head>
-        <title>Administracion</title>
-    </head>
-    <body>
-        <h1>Administracion</h1>
-        <a href="/">Index</a>
-        <a href="/logout">logout</a>
-        <p>Bienvenido $username</p>
-    </body>
+  <head><title>Registro</title></head>
+  <body>
+    <h2>Registro de nuevo usuario</h2>
+    <form method="POST">
+      Usuario: <input type="text" name="username"><br>
+      Contraseña: <input type="password" name="password"><br>
+      <input type="submit" value="Registrar">
+    </form>
+    <a href="/login">Iniciar sesión</a>
+  </body>
 </html>

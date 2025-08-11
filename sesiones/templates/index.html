@@ -1,12 +1,14 @@
-$def with(username)
+$def with (user)
 <html>
-    <head>
-        <title>Index</title>
-    </head>
-    <body>
-        <h1>Index</h1>
-        <a href="/administracion">Administracion</a>
-        <a href="/logout">logout</a>
-        <p>Bienvenido $username</p>
-    </body>
+  <head><title>Inicio</title></head>
+  <body>
+    $if user:
+      <h2>Hola, $user</h2>
+      <a href="/logout">Cerrar sesión</a>
+    $else:
+      <h2>No estás logueado</h2>
+      <a href="/login">Iniciar sesión</a> |
+      <a href="/register">Registrarse</a>
+    $end
+  </body>
 </html>

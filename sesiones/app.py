@@ -1,100 +1,104 @@
 import web
 import sqlite3
 import hashlib
+import os
 
-urls = (
-    "/", "Index",
-    "/login", "Login",
-    "/logout", "Logout",
-    "/administracion", "Administracion",
-)
-
+# Desactivar debug para producción
 web.config.debug = False
 
-app = web.application(urls, globals())
-session = web.session.Session(app, web.session.DiskStore("sessions"))
-render = web.template.render("templates/")
+# Rutas
+urls = (
+    "/", "Index",
+    "/login/", "Login",
+    "/logout/", "Logout",
+    "/register/", "Register"
+)
 
+# Crear la aplicación
+app = web.application(urls, globals())
+
+# Configuración de sesiones
+if not os.path.exists("sessions"):
+    os.mkdir("sessions")
+
+session = web.session.Session(app, web.session.DiskStore("sessions"), initializer={"user": None})
+
+# Conexión a la base de datos SQLite
+def get_db():
+    return sqlite3.connect("users.db")
+
+# Crear tabla de usuarios si no existe
+with get_db() as db:
+    db.execute("""
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT UNIQUE NOT NULL,
+            password TEXT NOT NULL
+        )
+    """)
+    db.commit()
+
+# Página principal
 class Index:
     def GET(self):
-        # Imprime los valores almacenados en la session.
-        # NOTA: solo es para verificar visualmente los valores.
-        print(f"logged_in: {session.get("logged_in")}")
-        print(f"name: {session.get("name")}")
-
-        # Valida si logged_in es True
-        if session.get("logged_in"):
-            # Renderiza la pagina index.html y le envia el nombre del usuario
-            return render.index(session.get("name"))
-        else:
-            # Redirecciona a login
+        if not session.user:
             raise web.seeother("/login")
+        return f"Bienvenido, {session.user} | <a href='/logout'>Cerrar sesión</a>"
 
-class Administracion:
+# Registro de usuarios
+class Register:
     def GET(self):
-        # Imprime los valores almacenados en la session.
-        # NOTA: solo es para verificar visualmente los valores.
-        print(f"logged_in: {session.get("logged_in")}")
-        print(f"name: {session.get("name")}")
-
-
-        # Valida si logged_in es True
-        if session.get("logged_in"):
-            # Renderiza la pagina administracion.html y le envia el nombre del usuario
-            return render.administracion(session.get("name"))
-        else:
-            raise web.seeother("/login")
-
-class Login:
-    def GET(self):
-        if session.get("logged_in"):
-            raise web.seeother("/")
-        return render.login()
+        return """
+            <form method='POST'>
+                Usuario: <input type='text' name='username'><br>
+                Contraseña: <input type='password' name='password'><br>
+                <input type='submit' value='Registrarse'>
+            </form>
+        """
 
     def POST(self):
-        # Almacena los datos del formulario de login.html
-        formulario = web.input()
-        username = formulario.username
-        password = formulario.password
-        # Imprime los datos solo para verificarlos visualmente
-        print(f"username: {username}")
-        print(f"password: {password}")
+        data = web.input()
+        username = data.username
+        password = hashlib.sha256(data.password.encode()).hexdigest()
 
-        # Codifica el password en UTF-8
-        password_bytes = password.encode('utf-8')
-        # Cifra el password en sha1, tal como esta almacenado en la base de datos
-        password_sha1 = hashlib.sha1(password_bytes).hexdigest()
+        try:
+            with get_db() as db:
+                db.execute("INSERT INTO users (username, password) VALUES (?, ?)", (username, password))
+                db.commit()
+            return "Usuario registrado correctamente. <a href='/login'>Iniciar sesión</a>"
+        except sqlite3.IntegrityError:
+            return "El usuario ya existe."
 
-        # Crea una conexion con la base de datos
-        conn = sqlite3.connect('base_demo.db')
-        # Crea un cursor para realizar las consultas
-        c = conn.cursor()
+# Inicio de sesión
+class Login:
+    def GET(self):
+        return """
+            <form method='POST'>
+                Usuario: <input type='text' name='username'><br>
+                Contraseña: <input type='password' name='password'><br>
+                <input type='submit' value='Iniciar sesión'>
+            </form>
+        """
 
-        # Prepara la sentencia de consulta para prevenir inyeccion de sql.
-        sql = "SELECT username,name FROM users WHERE username=? AND password=?"
-        # datos de la consulta con el password cifrado
-        data = (username,password_sha1)
-        # Ejecuta la consulta
-        c.execute(sql,data)
-        # Obtiene el registro en caso de que el username y el password coincidan en la consulta.
-        result = c.fetchone()
-        # Imprimir el username para verificar
-        # NOTA: en caso de que el username o el password no coincidan imprimira None.
-        print(f"Resultado consulta: {result}")
-        # Si la consulta es distinta a None existe un usuario con esos datos.
-        if result is not None:
-            session.logged_in = True # Indica que la sesion fue iniciada
-            session.name = result[1] # Alamcena el segundo elemento de conjunto, en este caso "name"
+    def POST(self):
+        data = web.input()
+        username = data.username
+        password = hashlib.sha256(data.password.encode()).hexdigest()
+
+        with get_db() as db:
+            cur = db.execute("SELECT * FROM users WHERE username=? AND password=?", (username, password))
+            user = cur.fetchone()
+
+        if user:
+            session.user = username
             raise web.seeother("/")
         else:
-            # En caso de que no haya un registro con esos datos renderiza login y envia un mensaje
-            return render.login("El nombre de usuario o contraseña son incorrectos")
+            return "Usuario o contraseña incorrectos."
 
+# Cerrar sesión
 class Logout:
     def GET(self):
-        # Cierra la session
-        session.kill()
-        # Redirecciona a login.html
+        session.user = None
         raise web.seeother("/login")
 
 if __name__ == "__main__":
