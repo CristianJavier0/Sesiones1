@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dashboard</title>
+    <style>
+        table { border-collapse: collapse; width: 100%; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .current { background-color: #e6f7ff; }
+    </style>
+</head>
+<body>
+    <h1>Bienvenido, {{ nombre }} ({{ rol }})</h1>
+    
+    <h2>Tus Sesiones Activas</h2>
+    <table>
+        <tr>
+            <th>Dispositivo</th>
+            <th>Dirección IP</th>
+            <th>Iniciada</th>
+            <th>Última Actividad</th>
+            <th>Expira</th>
+        </tr>
+        {% for sesion in sesiones %}
+        <tr {% if sesion['id_sesion'] == session.id_sesion %}class="current"{% endif %}>
+            <td>
+                {% if 'Mozilla' in sesion['user_agent'] %}
+                    Firefox
+                {% elif 'Chrome' in sesion['user_agent'] %}
+                    Chrome
+                {% elif 'Safari' in sesion['user_agent'] %}
+                    Safari
+                {% else %}
+                    {{ sesion['user_agent'][:20] }}...
+                {% endif %}
+            </td>
+            <td>{{ sesion['ip_address'] }}</td>
+            <td>{{ sesion['fecha_inicio'] }}</td>
+            <td>{{ sesion['ultima_actividad'] }}</td>
+            <td>{{ sesion['expiracion'] }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+    
+    <form method="POST">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit">Cerrar Sesión</button>
+    </form>
+</body>
+</html>
