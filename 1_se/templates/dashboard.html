@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dashboard</title>
+</head>
+<body>
+    <h1>Bienvenido, {{ username }}!</h1>
+    
+    <h2>Tus sesiones activas:</h2>
+    <table border="1">
+        <tr>
+            <th>ID Sesión</th>
+            <th>IP</th>
+            <th>Navegador</th>
+            <th>Última actividad</th>
+            <th>Expira</th>
+        </tr>
+        {% for sess in active_sessions %}
+        <tr>
+            <td>{{ sess['session_id'] }}</td>
+            <td>{{ sess['ip_address'] }}</td>
+            <td>{{ sess['user_agent'] }}</td>
+            <td>{{ sess['last_activity'] }}</td>
+            <td>{{ sess['expires_at'] }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+    
+    <p><a href="{{ url_for('logout') }}">Cerrar sesión</a></p>
+</body>
+</html>
