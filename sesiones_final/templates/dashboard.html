@@ -1,68 +1,28 @@
 <!DOCTYPE html>
-<html lang="es">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel de Control</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>Dashboard</title>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <div class="container">
-            <a class="navbar-brand" href="#">Sistema de Login</a>
-            <div class="navbar-collapse">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <span class="nav-link">Bienvenido, {{ usuario.nombre }}</span>
+    <h1>Bienvenido, {{ user_name }}!</h1>
+    <p>Rol: {{ user_role }}</p>
+    
+    {% if user_role == 'admin' %}
+        <h2>Sesiones Activas</h2>
+        {% if active_sessions %}
+            <ul>
+                {% for sesion in active_sessions %}
+                    <li>
+                        Usuario: {{ sesion['nombre_U'] }} {{ sesion['apellido_PU'] }} - 
+                        Inició: {{ sesion['fecha_inicio'] }}
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('logout') }}">Cerrar Sesión</a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
-
-    <div class="container mt-4">
-        <div class="row">
-            <div class="col-md-8 mx-auto">
-                <div class="card">
-                    <div class="card-header">
-                        <h4>Panel de Control</h4>
-                    </div>
-                    <div class="card-body">
-                        <h5>Información de tu cuenta:</h5>
-                        <p><strong>Nombre:</strong> {{ usuario.nombre }}</p>
-                        <p><strong>Correo:</strong> {{ usuario.correo }}</p>
-                        <p><strong>Rol:</strong> {{ usuario.rol }}</p>
-
-                        <hr>
-
-                        <h5>Tus sesiones activas:</h5>
-                        <table class="table table-bordered">
-                            <thead>
-                                <tr>
-                                    <th>Fecha Inicio</th>
-                                    <th>Última Actividad</th>
-                                    <th>Dirección IP</th>
-                                    <th>Dispositivo</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for sesion in sesiones %}
-                                <tr {% if sesion['id_sesion'] == usuario.sesion_id %}class="table-info"{% endif %}>
-                                    <td>{{ sesion['fecha_inicio'] }}</td>
-                                    <td>{{ sesion['fecha_ultima_actividad'] }}</td>
-                                    <td>{{ sesion['direccion_ip'] }}</td>
-                                    <td>{{ sesion['user_agent']|truncate(30) }}</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>No hay sesiones activas</p>
+        {% endif %}
+    {% endif %}
+    
+    <a href="{{ url_for('logout') }}">Cerrar Sesión</a>
 </body>
 </html>
